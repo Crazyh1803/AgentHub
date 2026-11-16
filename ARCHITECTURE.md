@@ -42,6 +42,7 @@ agent-hub/
     settings.py      # (added) loads config/settings.yaml, creates missing folders
     db.py            # SQLite schema + queries
     projects.py      # (added) loads types/*.yaml, creates and lists projects
+    assets.py        # (added) asset index: scans a project folder into the DB
     packer.py        # builds the brief for a task
     router.py        # reads routing.yaml + capabilities.yaml
     adapters/
@@ -61,8 +62,11 @@ agent-hub/
     settings.yaml    # (added) projects_root, db_path, default_theme
   web/               # html, js
     templates/       # (added) Jinja2 templates rendered by FastAPI
-      index.html     # the page shell
+      base.html      # the page shell every page extends
+      index.html     # home page
+      project.html   # one project
       _projects.html # project list + "New project" form; htmx swaps it
+      _assets.html   # asset table + Rescan button; htmx swaps it
     vendor/
       htmx.min.js    # (added) htmx 2.0.4, vendored, no build step
     base.css         # (added) layout CSS; uses theme variables only
@@ -118,6 +122,21 @@ MyGame/
 Type templates are copied from the spec as-is. Agents and tools a template
 names that v0.1 has no adapter for (`comfyui`, `ollama`, the 3d-print
 `pipeline`) are stored but not used yet.
+
+## Asset index *(added)*
+
+`app/assets.py` scans a whole project folder into the `assets` table. It runs
+once when a project is created and again whenever Rescan is pressed on the
+project page.
+
+- Hidden files and folders are skipped: any path with a part starting with
+  `.` (`.git/`, `.gitkeep`, `.env`).
+- `path` is relative to the project folder, with forward slashes.
+- `type` comes from the file extension: `image`, `model`, `audio`, `video`,
+  `code`, `doc`, `data`, or `other`. The table is at the top of the module.
+- `tags` default to the file's folder names (`assets,textures`). A rescan
+  refreshes type and size but never overwrites tags.
+- Rows for files that no longer exist are removed.
 
 ## Adapter interface (the only extension point in v0.1)
 

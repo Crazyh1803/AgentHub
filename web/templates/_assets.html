@@ -1,0 +1,29 @@
+<section id="assets" class="panel">
+  <div class="row">
+    <h2>Assets</h2>
+    <button hx-post="/projects/{{ project.id }}/rescan" hx-target="#assets" hx-swap="outerHTML">Rescan</button>
+  </div>
+  {% if error %}
+  <p class="error" role="alert">{{ error }}</p>
+  {% endif %}
+  {% if assets %}
+  <p class="muted">{{ assets|length }} file{{ "" if assets|length == 1 else "s" }}, {{ assets|sum(attribute="size")|filesizeformat }}</p>
+  <table>
+    <thead>
+      <tr><th>Path</th><th>Type</th><th>Size</th><th>Tags</th></tr>
+    </thead>
+    <tbody>
+      {% for asset in assets %}
+      <tr>
+        <td><code>{{ asset.path }}</code></td>
+        <td>{{ asset.type }}</td>
+        <td>{{ asset.size|filesizeformat }}</td>
+        <td class="muted">{{ asset.tags.replace(",", ", ") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No files indexed yet. Press Rescan to scan the folder.</p>
+  {% endif %}
+</section>

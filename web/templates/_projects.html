@@ -9,7 +9,7 @@
       <tbody>
         {% for project in projects %}
         <tr>
-          <td>{{ project.name }}</td>
+          <td><a href="/projects/{{ project.id }}">{{ project.name }}</a></td>
           <td>{{ project.type }}</td>
           <td>{{ project.status }}</td>
           <td><code>{{ project.path }}</code></td>

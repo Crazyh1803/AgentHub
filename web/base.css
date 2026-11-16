@@ -34,6 +34,34 @@ a {
   border-radius: var(--radius);
 }
 
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .muted {
   color: var(--muted);
 }

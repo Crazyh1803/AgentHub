@@ -8,7 +8,7 @@
        create a project (folders, project.yaml, decisions.md,
        git init + first commit); UI: project list + "New project"
        form
-- [ ] 4. Asset index: scan a project folder into the assets table;
+- [x] 4. Asset index: scan a project folder into the assets table;
        show it on the project page with a Rescan button
 - [ ] 5. Adapters: base.py, claude_code.py, codex.py; available()
        health check shown in the UI header; run() with stdin or

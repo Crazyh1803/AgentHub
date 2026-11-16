@@ -1,14 +1,22 @@
 """FastAPI routes."""
 
 from contextlib import asynccontextmanager, closing
+from pathlib import Path
 
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.assets import list_assets, scan_project
 from app.db import connect, init_db
-from app.projects import ProjectError, create_project, list_projects, load_types
+from app.projects import (
+    ProjectError,
+    create_project,
+    get_project,
+    list_projects,
+    load_types,
+)
 from app.settings import ROOT, ensure_folders, load_settings
 
 WEB_DIR = ROOT / "web"
@@ -36,8 +44,7 @@ app.mount("/themes", StaticFiles(directory=THEMES_DIR), name="themes")
 def index(request: Request) -> HTMLResponse:
     with closing(connect(settings.db_path)) as conn:
         context = _projects_context(conn)
-    context["theme"] = settings.default_theme
-    return templates.TemplateResponse(request, "index.html", context)
+    return _page(request, "index.html", context)
 
 
 @app.post("/projects", response_class=HTMLResponse)
@@ -55,12 +62,53 @@ def new_project(
         try:
             if type not in types:
                 raise ProjectError("Pick a project type.")
-            create_project(conn, settings.projects_root, types[type], name, goal)
+            folder = create_project(conn, settings.projects_root, types[type], name, goal)
+            project_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            scan_project(conn, project_id, folder)
             form = {}
         except ProjectError as exc:
             error = str(exc)
         context = _projects_context(conn, form=form, error=error)
     return templates.TemplateResponse(request, "_projects.html", context)
+
+
+@app.get("/projects/{project_id}", response_class=HTMLResponse)
+def project_page(request: Request, project_id: int) -> HTMLResponse:
+    with closing(connect(settings.db_path)) as conn:
+        project = _project_or_404(conn, project_id)
+        context = {"project": project, "assets": list_assets(conn, project_id)}
+    return _page(request, "project.html", context)
+
+
+@app.post("/projects/{project_id}/rescan", response_class=HTMLResponse)
+def rescan(request: Request, project_id: int) -> HTMLResponse:
+    """Rescan the project folder, then return the assets section for htmx."""
+    with closing(connect(settings.db_path)) as conn:
+        project = _project_or_404(conn, project_id)
+        folder = Path(project["path"])
+        error = None
+        if folder.is_dir():
+            scan_project(conn, project_id, folder)
+        else:
+            error = f"The project folder is missing: {folder}"
+        context = {
+            "project": project,
+            "assets": list_assets(conn, project_id),
+            "error": error,
+        }
+    return templates.TemplateResponse(request, "_assets.html", context)
+
+
+def _page(request: Request, template: str, context: dict) -> HTMLResponse:
+    context["theme"] = settings.default_theme
+    return templates.TemplateResponse(request, template, context)
+
+
+def _project_or_404(conn, project_id: int):
+    project = get_project(conn, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
 
 
 def _projects_context(conn, form: dict | None = None, error: str | None = None) -> dict:

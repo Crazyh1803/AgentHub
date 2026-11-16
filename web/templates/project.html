@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · Agent Hub{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>{{ project.name }}</h2>
+  <dl>
+    <dt>Type</dt><dd>{{ project.type }}</dd>
+    <dt>Status</dt><dd>{{ project.status }}</dd>
+    <dt>Folder</dt><dd><code>{{ project.path }}</code></dd>
+  </dl>
+</section>
+{% include "_assets.html" %}
+{% endblock %}

@@ -33,6 +33,10 @@ def list_projects(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute("SELECT * FROM projects ORDER BY id DESC").fetchall()
 
 
+def get_project(conn: sqlite3.Connection, project_id: int) -> sqlite3.Row | None:
+    return conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+
+
 def create_project(
     conn: sqlite3.Connection,
     projects_root: Path,

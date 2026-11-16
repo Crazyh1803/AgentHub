@@ -31,6 +31,33 @@ def test_new_project_form_creates_and_lists_the_project(client, settings):
     assert "MyGame" in client.get("/").text
 
 
+def test_project_page_lists_the_assets_indexed_at_creation(client):
+    client.post("/projects", data={"name": "MyGame", "type": "game"})
+    assert 'href="/projects/1"' in client.get("/").text
+
+    page = client.get("/projects/1").text
+    assert "MyGame" in page
+    assert "project.yaml" in page
+    assert "decisions.md" in page
+    assert ".gitkeep" not in page
+
+
+def test_rescan_picks_up_new_files(client, settings):
+    client.post("/projects", data={"name": "MyGame", "type": "game"})
+    texture = settings.projects_root / "MyGame" / "assets" / "textures" / "wall.png"
+    texture.write_bytes(b"12345")
+    assert "wall.png" not in client.get("/projects/1").text
+
+    section = client.post("/projects/1/rescan").text
+    assert "assets/textures/wall.png" in section
+    assert "wall.png" in client.get("/projects/1").text
+
+
+def test_unknown_project_is_a_404(client):
+    assert client.get("/projects/999").status_code == 404
+    assert client.post("/projects/999/rescan").status_code == 404
+
+
 def test_new_project_form_shows_errors_and_keeps_input(client):
     client.post("/projects", data={"name": "MyGame", "type": "game"})
     duplicate = client.post("/projects", data={"name": "MyGame", "type": "game"})
