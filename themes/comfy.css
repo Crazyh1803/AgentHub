@@ -1,0 +1,12 @@
+/* Comfy (default): warm neutrals, rounded corners, sans-serif UI font.
+   Variables only — no selectors other than :root. */
+:root {
+  --bg: #f4ede4;
+  --panel: #fbf7f1;
+  --text: #3b322b;
+  --muted: #8a7d70;
+  --accent: #c8704a;
+  --font-ui: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", Consolas, monospace;
+  --radius: 12px;
+}

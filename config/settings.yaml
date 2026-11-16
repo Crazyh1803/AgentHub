@@ -1,0 +1,4 @@
+# Hub settings. Editable from the UI later.
+projects_root: ~/AgentHubProjects   # where project folders are created
+db_path: data/hub.db                # relative to the repo root
+default_theme: comfy                # a file name in themes/, without .css
