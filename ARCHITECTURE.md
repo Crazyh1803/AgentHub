@@ -33,6 +33,7 @@ The router sends work either to an agent with a packed brief, or straight to a t
 ```
 agent-hub/
   ARCHITECTURE.md
+  BUILD_PLAN.md      # (added) the v0.1 steps; "next step" = first unchecked one
   requirements.txt   # (added) Python dependencies
   pytest.ini         # (added) test settings
   data/              # (added) hub.db lives here; git-ignored, created on startup
@@ -68,6 +69,22 @@ agent-hub/
 `/themes`. The page links one theme file, chosen by `default_theme` in
 `config/settings.yaml`; swapping that link swaps the theme.
 
+## Database *(added)*
+
+One SQLite file at `db_path`, created on startup by `app/db.py` (plain
+`sqlite3`, foreign keys on). Timestamps are ISO 8601 text in UTC.
+
+| Table | Columns |
+| --- | --- |
+| `projects` | `id`, `name` (unique), `type`, `status` (default `active`), `path` (unique), `created_at` |
+| `tasks` | `id`, `project_id`, `title`, `description`, `type` (`code`, `review`, `docs`, `other`), `agent` (adapter name or `auto`), `status` (default `pending`), `created_at` |
+| `runs` | `id`, `task_id`, `agent`, `started_at`, `finished_at`, `duration_s`, `exit_code`, `stdout`, `stderr`, `brief_path`, `diff`, `files_changed` (JSON list), `tokens_in`, `tokens_out` |
+| `assets` | `id`, `project_id`, `path` (relative, unique per project), `type`, `size`, `tags` (comma-separated) |
+
+A run row is inserted when the run starts, so its id exists for the snapshot
+commit and `runs/<id>.md`; the result columns are filled in when it ends.
+Deleting a project deletes its tasks, runs and assets rows (not its folder).
+
 ## Project folder layout (created from the type)
 
 ```
@@ -98,7 +115,7 @@ class Adapter:
 ```python
 @dataclass
 class RunResult:
-    run_id: str
+    run_id: int
     agent: str
     task_id: int
     started_at: datetime
