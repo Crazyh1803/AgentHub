@@ -41,6 +41,7 @@ agent-hub/
     main.py          # FastAPI routes
     settings.py      # (added) loads config/settings.yaml, creates missing folders
     db.py            # SQLite schema + queries
+    projects.py      # (added) loads types/*.yaml, creates and lists projects
     packer.py        # builds the brief for a task
     router.py        # reads routing.yaml + capabilities.yaml
     adapters/
@@ -48,6 +49,9 @@ agent-hub/
       claude_code.py
       codex.py
   types/             # project type templates
+    game.yaml
+    utility.yaml
+    3d-print.yaml
   themes/
     comfy.css
     hackers.css
@@ -57,7 +61,8 @@ agent-hub/
     settings.yaml    # (added) projects_root, db_path, default_theme
   web/               # html, js
     templates/       # (added) Jinja2 templates rendered by FastAPI
-      index.html
+      index.html     # the page shell
+      _projects.html # project list + "New project" form; htmx swaps it
     vendor/
       htmx.min.js    # (added) htmx 2.0.4, vendored, no build step
     base.css         # (added) layout CSS; uses theme variables only
@@ -96,6 +101,23 @@ MyGame/
   runs/              # one markdown file per run
   src/               # or whatever the type defines
 ```
+
+*(added)* How a project is created (`app/projects.py`):
+
+1. The name is checked: letters, digits, spaces, dashes and underscores only,
+   starting with a letter or digit, 63 characters at most. The folder is
+   `projects_root/<name>` and must not exist yet.
+2. The type's `folders` are created, plus `notes/`, `assets/` and `runs/`
+   for every type. Each empty folder gets a `.gitkeep` so git tracks it.
+3. `project.yaml` is written with `name`, `type`, `status`, `created`,
+   `goal`, `stack`, `conventions`. `decisions.md` starts empty (no heading,
+   so the packer's "first 10 lines" are all decisions).
+4. `git init`, then one commit: `hub: create project <name>`.
+5. The `projects` row is inserted last.
+
+Type templates are copied from the spec as-is. Agents and tools a template
+names that v0.1 has no adapter for (`comfyui`, `ollama`, the 3d-print
+`pipeline`) are stored but not used yet.
 
 ## Adapter interface (the only extension point in v0.1)
 

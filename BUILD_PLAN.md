@@ -4,7 +4,7 @@
        with the Comfy theme
 - [x] 2. Settings + database: load config/settings.yaml; SQLite
        schema for projects, tasks, runs, assets; tests
-- [ ] 3. Projects: load types/*.yaml (game, utility, 3d-print);
+- [x] 3. Projects: load types/*.yaml (game, utility, 3d-print);
        create a project (folders, project.yaml, decisions.md,
        git init + first commit); UI: project list + "New project"
        form

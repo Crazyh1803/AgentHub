@@ -1,0 +1,14 @@
+name: game
+label: Game
+folders: [src, assets/models, assets/textures, assets/audio, notes, runs]
+default_agents:
+  code: codex
+  review: claude_code
+  assets_3d: claude_code      # drives Blender via MCP
+  images: comfyui
+  cheap: ollama
+tools: [git, blender, comfyui]
+checklist:
+  - Game design doc in notes/
+  - Playable build runs
+  - Assets indexed

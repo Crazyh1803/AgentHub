@@ -1,0 +1,50 @@
+<div id="projects">
+  <section class="panel">
+    <h2>Projects</h2>
+    {% if projects %}
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Type</th><th>Status</th><th>Folder</th></tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+        <tr>
+          <td>{{ project.name }}</td>
+          <td>{{ project.type }}</td>
+          <td>{{ project.status }}</td>
+          <td><code>{{ project.path }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No projects yet. Create the first one below.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>New project</h2>
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form hx-post="/projects" hx-target="#projects" hx-swap="outerHTML">
+      <label>
+        Name
+        <input type="text" name="name" value="{{ form.name }}" required maxlength="63">
+      </label>
+      <label>
+        Type
+        <select name="type" required>
+          {% for type in types %}
+          <option value="{{ type.name }}" {% if form.type == type.name %}selected{% endif %}>{{ type.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Goal <span class="muted">(optional, one line)</span>
+        <input type="text" name="goal" value="{{ form.goal }}">
+      </label>
+      <button type="submit">Create project</button>
+    </form>
+  </section>
+</div>

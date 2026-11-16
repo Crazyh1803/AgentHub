@@ -1,0 +1,15 @@
+name: 3d-print
+label: 3D print
+folders: [scad, stl, gcode, photos, notes, runs]
+default_agents:
+  model: claude_code          # writes .scad
+  cheap: ollama
+tools: [openscad, orcaslicer, printer]
+pipeline:                      # deterministic, no agent tokens
+  - openscad: scad/*.scad -> stl/
+  - slicer:   "stl/*.stl -> gcode/ (profile: config/creality.ini)"
+  - printer:  upload gcode, do not auto-start
+checklist:
+  - Parameters exposed at top of .scad
+  - Preview PNG rendered
+  - Test print logged with photo

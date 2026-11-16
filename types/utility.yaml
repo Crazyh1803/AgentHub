@@ -1,0 +1,11 @@
+name: utility
+label: Utility app
+folders: [src, tests, notes, runs]
+default_agents:
+  code: codex
+  review: claude_code
+  cheap: ollama
+tools: [git]
+checklist:
+  - README with install steps
+  - Tests pass
