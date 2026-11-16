@@ -32,4 +32,5 @@ def client(settings, git_identity, monkeypatch):
     with closing(connect(settings.db_path)) as conn:
         init_db(conn)
     monkeypatch.setattr(main, "settings", settings)
+    monkeypatch.setattr(main, "health", {"claude_code": True, "codex": False})
     return TestClient(main.app)

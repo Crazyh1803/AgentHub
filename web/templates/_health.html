@@ -1,0 +1,8 @@
+<div id="health" class="health">
+  {% for name, available in health.items() %}
+  <span class="agent {{ 'up' if available else 'down' }}" title="{{ name }} --version {{ 'succeeded' if available else 'failed or the CLI is missing' }}">
+    {{ name }}: {{ "available" if available else "unavailable" }}
+  </span>
+  {% endfor %}
+  <button class="quiet" hx-post="/health/recheck" hx-target="#health" hx-swap="outerHTML">Recheck</button>
+</div>

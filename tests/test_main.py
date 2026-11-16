@@ -53,6 +53,22 @@ def test_rescan_picks_up_new_files(client, settings):
     assert "wall.png" in client.get("/projects/1").text
 
 
+def test_header_shows_adapter_health(client):
+    page = client.get("/").text
+    assert "claude_code: available" in page
+    assert "codex: unavailable" in page
+
+
+def test_recheck_runs_the_checks_again(client, monkeypatch):
+    from app import main
+
+    monkeypatch.setattr(main, "check_health", lambda adapters: {"claude_code": False, "codex": True})
+    section = client.post("/health/recheck").text
+    assert "claude_code: unavailable" in section
+    assert "codex: available" in section
+    assert "codex: available" in client.get("/").text
+
+
 def test_unknown_project_is_a_404(client):
     assert client.get("/projects/999").status_code == 404
     assert client.post("/projects/999/rescan").status_code == 404

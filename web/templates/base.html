@@ -9,8 +9,9 @@
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
 <body>
-  <header>
+  <header class="row">
     <h1><a href="/">Agent Hub</a></h1>
+    {% include "_health.html" %}
   </header>
   <main>
     {% block content %}{% endblock %}

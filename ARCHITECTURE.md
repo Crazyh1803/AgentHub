@@ -34,6 +34,7 @@ The router sends work either to an agent with a packed brief, or straight to a t
 agent-hub/
   ARCHITECTURE.md
   BUILD_PLAN.md      # (added) the v0.1 steps; "next step" = first unchecked one
+  run.bat            # (added) double-click launcher: venv, uvicorn, browser
   requirements.txt   # (added) Python dependencies
   pytest.ini         # (added) test settings
   data/              # (added) hub.db lives here; git-ignored, created on startup
@@ -46,7 +47,8 @@ agent-hub/
     packer.py        # builds the brief for a task
     router.py        # reads routing.yaml + capabilities.yaml
     adapters/
-      base.py        # the Adapter interface
+      __init__.py    # (added) finds every Adapter subclass in this folder
+      base.py        # the Adapter interface + RunResult
       claude_code.py
       codex.py
   types/             # project type templates
@@ -67,6 +69,7 @@ agent-hub/
       project.html   # one project
       _projects.html # project list + "New project" form; htmx swaps it
       _assets.html   # asset table + Rescan button; htmx swaps it
+      _health.html   # adapter availability in the header + Recheck button
     vendor/
       htmx.min.js    # (added) htmx 2.0.4, vendored, no build step
     base.css         # (added) layout CSS; uses theme variables only
@@ -154,23 +157,42 @@ class Adapter:
 `usage()` is not part of the v0.1 interface; it comes back in v0.2 (decision 9).
 
 ```python
-@dataclass
+@dataclass(kw_only=True)
 class RunResult:
-    run_id: int
+    run_id: int | None = None       # filled in by the hub
     agent: str
-    task_id: int
+    task_id: int | None = None      # filled in by the hub
     started_at: datetime
     finished_at: datetime
     duration_s: float
     exit_code: int
     stdout: str
     stderr: str
-    brief_path: Path
-    diff: str
-    files_changed: list[str]
-    tokens_in: int | None
-    tokens_out: int | None
+    brief_path: Path | None = None  # filled in by the hub
+    diff: str = ""                  # filled in by the hub
+    files_changed: list[str]        # filled in by the hub
+    tokens_in: int | None = None
+    tokens_out: int | None = None
 ```
+
+*(added)* How adapters work in v0.1:
+
+- `run(brief, workdir)` only knows the brief and the folder, so it fills in
+  the agent, times, exit code and output. The hub adds the ids, brief path
+  and diff when it records the run.
+- The shared logic lives in `base.py`. A provider file only sets `name`,
+  `executable` and `run_args`. `app/adapters/__init__.py` discovers every
+  `Adapter` subclass in the folder, so adding or deleting a file is enough.
+- The executable is resolved with `shutil.which`, args are a list,
+  `shell=False`, and the brief is always written to the CLI's stdin.
+  Claude Code: `claude -p --permission-mode acceptEdits`. Codex:
+  `codex exec --full-auto -`.
+- `run()` never raises for a missing CLI or a timeout: it returns exit code
+  127 (not found) or 124 (timed out after 30 minutes) with the reason in
+  `stderr`.
+- Health: every adapter's `available()` runs at startup and the result is
+  shown in the page header. "Recheck" runs the checks again without a
+  restart. `--version` succeeding does not prove the CLI is logged in.
 
 A new provider is one new file in `adapters/` plus one entry in `capabilities.yaml`. Nothing else changes.
 

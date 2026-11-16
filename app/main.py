@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.adapters import check_health, load_adapters
 from app.assets import list_assets, scan_project
 from app.db import connect, init_db
 from app.projects import (
@@ -25,6 +26,8 @@ TYPES_DIR = ROOT / "types"
 
 settings = load_settings()
 templates = Jinja2Templates(directory=WEB_DIR / "templates")
+adapters = load_adapters()
+health: dict[str, bool] = {}    # adapter name -> available; filled at startup
 
 
 @asynccontextmanager
@@ -32,6 +35,7 @@ async def lifespan(app: FastAPI):
     ensure_folders(settings)
     with closing(connect(settings.db_path)) as conn:
         init_db(conn)
+    health.update(check_health(adapters))
     yield
 
 
@@ -99,8 +103,16 @@ def rescan(request: Request, project_id: int) -> HTMLResponse:
     return templates.TemplateResponse(request, "_assets.html", context)
 
 
+@app.post("/health/recheck", response_class=HTMLResponse)
+def recheck_health(request: Request) -> HTMLResponse:
+    """Run the adapter checks again, then return the header list for htmx."""
+    health.update(check_health(adapters))
+    return templates.TemplateResponse(request, "_health.html", {"health": health})
+
+
 def _page(request: Request, template: str, context: dict) -> HTMLResponse:
     context["theme"] = settings.default_theme
+    context["health"] = health
     return templates.TemplateResponse(request, template, context)
 
 

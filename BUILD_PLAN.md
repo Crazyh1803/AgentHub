@@ -10,9 +10,12 @@
        form
 - [x] 4. Asset index: scan a project folder into the assets table;
        show it on the project page with a Rescan button
-- [ ] 5. Adapters: base.py, claude_code.py, codex.py; available()
+- [x] 5. Adapters: base.py, claude_code.py, codex.py; available()
        health check shown in the UI header; run() with stdin or
        brief file, tested with a trivial prompt
+       - [ ] Still open: a real reply from each CLI. On 2026-11-16
+             `claude -p` returned 401 (not logged in) and codex was
+             not installed, so run() is only proven with a stand-in CLI.
 - [ ] 6. Context packer: build the brief within budget; UI shows a
        preview of the brief before sending
 - [ ] 7. Router: precedence rules + fallback when an agent is
